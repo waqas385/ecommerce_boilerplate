@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { decrypt, encrypt } from './util/encryption.util';
-import { JwtConstant } from 'src/auth/constants/jwt.constants';
 
 @Injectable()
 export class CommonService {
@@ -21,7 +20,7 @@ export class CommonService {
 
   public async verifyJWT(token: string): Promise<any> {
     return await this.jwtService.verifyAsync(token, {
-      secret: JwtConstant.SECRET,
+      secret: process.env.JWT_SECRET,
     });
   }
 

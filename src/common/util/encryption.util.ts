@@ -1,5 +1,4 @@
 import { createCipheriv, createDecipheriv, scryptSync } from 'crypto';
-import { JwtConstant } from 'src/auth/constants/jwt.constants';
 
 export function encrypt(text: string): string {
   try {
@@ -32,9 +31,14 @@ export function decrypt(text: string): string {
 }
 
 function getEncryptDecryptOptions(): any {
+  const ENCRYPT_DECRYPT_KEY = process.env.ENCRYPT_DECRYPT_KEY?.toString();
   return {
-    algo: JwtConstant.ENCRYPT_DECRYPT_ALGO,
-    iv: JwtConstant.ENCRYPT_DECRYPT_IV,
-    key: scryptSync(JwtConstant.ENCRYPT_DECRYPT_KEY, 'salt', 32),
+    algo: process.env.ENCRYPT_DECRYPT_ALGO,
+    iv: process.env.ENCRYPT_DECRYPT_IV,
+    key: scryptSync(
+      ENCRYPT_DECRYPT_KEY || '',
+      'salt',
+      32
+    ),
   };
 }
