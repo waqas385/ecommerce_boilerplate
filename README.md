@@ -9,13 +9,20 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This is ecommerce project build using nestjs [Nest](https://github.com/nestjs/nest), pgSQL, Postman (Testing APIs endpoints)
 
 ## Project setup
 
 ```bash
 $ npm install
 ```
+
+## Project includes
+
+- Auth (using JWT)
+- Users
+- Products (CRUD)
+- Product categories (CRUD)
 
 ## Compile and run the project
 
