@@ -32,6 +32,7 @@ export class AuthService {
   }
 
   public async forgotPassword(email: string): Promise<any> {
+    // Send email with link to reset-password
     const token = await this.userService.forgotPassword(email);
     return {
       message: 'Use token to reset password',

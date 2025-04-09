@@ -16,10 +16,10 @@ export class ProductCategory {
     })
     public parentId: number;
 
-    @ManyToOne(() => Product, (product) => product.category, {
-        createForeignKeyConstraints: false
-    })
-    public products: Product[];
+    // @ManyToOne(() => Product, (product) => product.category, {
+    //     createForeignKeyConstraints: false
+    // })
+    // public products: Product[];
   
     @Column({ default: () => `now()`, nullable: false })
     public createdAt: Date;

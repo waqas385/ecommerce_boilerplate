@@ -11,7 +11,7 @@ export class ProductsCategoryService {
     constructor(
         @InjectRepository(ProductCategory)
         private productCategoryRepository: Repository<ProductCategory>,
-    ){}
+    ) { }
 
     async findOne(name: string) {
         const productGallery = await this.productCategoryRepository.findOne({
@@ -20,8 +20,8 @@ export class ProductsCategoryService {
             }
         });
 
-        if(!productGallery) {
-            throw new BadRequestException('Invalid product category '+name);
+        if (!productGallery) {
+            throw new BadRequestException('Invalid product category ' + name);
         }
 
         return productGallery;
@@ -53,24 +53,24 @@ export class ProductsCategoryService {
         const queryBuilder = this.productCategoryRepository.createQueryBuilder();
 
         queryBuilder.orderBy('id', pageRequestDTO.order)
-        .skip(pageRequestDTO.skip)
-        .take(pageRequestDTO.take);
+            .skip(pageRequestDTO.skip)
+            .take(pageRequestDTO.take);
 
         if (pageRequestDTO.search) {
             queryBuilder.andWhere('name like :search ', {
                 search: `%${pageRequestDTO.search}%`,
             });
         }
-      
+
         const itemCount = await queryBuilder.getCount();
         const { entities }: any = await queryBuilder.getRawAndEntities();
-    
+
         const pageMetaDto = new PageMetaDTO({
             itemCount,
             page: pageRequestDTO.page,
             take: pageRequestDTO.take,
         });
-    
+
         return new PageResponseDTO(await Promise.all(entities), pageMetaDto);
     }
 }

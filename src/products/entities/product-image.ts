@@ -2,7 +2,7 @@ import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Product } from "./product.entity";
 
 @Entity()
-export class ProductGallery {
+export class ProductImage {
     @PrimaryGeneratedColumn()
     public id: number;
       
@@ -12,7 +12,7 @@ export class ProductGallery {
     @Column('varchar')
     public path: string;
 
-    @ManyToOne(() => Product, (product) => product.gallery, {
+    @ManyToOne(() => Product, (product) => product.id, {
         createForeignKeyConstraints: false
     })
     product: Product

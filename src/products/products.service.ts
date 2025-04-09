@@ -18,7 +18,7 @@ export class ProductsService {
     private productGalleryService: ProductsGalleryService,
     private productCategoryService: ProductsCategoryService,
   ) {}
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto): Promise<Product> {
     if (await this.productWithNameAlreadyExists(createProductDto.name)) {
       throw new ConflictException(`Product with name ${createProductDto.name} already exists`)
     }
@@ -34,8 +34,8 @@ export class ProductsService {
     });
 
     await this.productRepository.insert(product);
-    if (createProductDto.images) {
-      product.gallery = await this.productGalleryService.addImages(createProductDto.images, product.id);
+    if (createProductDto.gallery) {
+      product.gallery = await this.productGalleryService.addImages(createProductDto.gallery, product);
     }
 
     return product;
@@ -54,14 +54,16 @@ export class ProductsService {
   async findAll(pageRequestDTO: PageRequestDTO,): Promise<PageResponseDTO<Product>> {
     const queryBuilder = this.productRepository.createQueryBuilder();
     
-    queryBuilder.orderBy('id', pageRequestDTO.order)
+    queryBuilder.orderBy('Product.id', pageRequestDTO.order)
+    .leftJoinAndSelect('Product.gallery', 'gallery')
     .skip(pageRequestDTO.skip)
     .take(pageRequestDTO.take);
 
     if (pageRequestDTO.search) {
-        queryBuilder.andWhere('name like :search ', {
-            search: `%${pageRequestDTO.search}%`,
-        });
+      // PGSQL - LOWER
+      queryBuilder.andWhere('LOWER(Product.name) like LOWER(:search) ', {
+          search: `%${pageRequestDTO.search}%`,
+      });
     }
   
     const itemCount = await queryBuilder.getCount();
@@ -76,16 +78,58 @@ export class ProductsService {
     return new PageResponseDTO(await Promise.all(entities), pageMetaDto);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findOne(id: number): Promise<Product> {
+    const product = await this.productRepository.findOne({
+      relations: {
+        gallery: true,
+        category: true
+      },
+      where: {
+        id
+      }
+    });
+
+    if (!product) {
+      throw new BadRequestException('Invalid product id');
+    }
+
+    return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: number, updateProductDto: UpdateProductDto): Promise<Product> {
+    const product = await this.findOne(id);
+
+    for (const field in updateProductDto) {
+      if (updateProductDto[field] && product[field]) {
+        product[field] = updateProductDto[field];
+      }
+    }
+
+    if (updateProductDto.category) {
+      const category = await this.productCategoryService.findOne(updateProductDto.category);
+      product.category = category;
+    }
+
+    if (product.gallery) {
+      await this.productGalleryService.deleteImages(product);
+      product.gallery = await this.productGalleryService.addImages(product.gallery, product);
+    }
+
+    await this.productRepository.save(product);
+    return product;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: number) {
+    const product = await this.findOne(id);
+
+    await this.productGalleryService.deleteImages(product);
+
+    // Delete product
+    await this.productRepository.remove(product);
+
+    return {
+      message: 'Record deleted successfully'
+    };
   }
 
 }

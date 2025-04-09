@@ -1,6 +1,6 @@
 import { Column, DeleteDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { ProductCategory } from "./product-category";
-import { ProductGallery } from "./product-gallery";
+import { ProductImage } from "./product-image";
 
 @Entity()
 export class Product {
@@ -37,6 +37,6 @@ export class Product {
     @JoinColumn()
     category: ProductCategory
 
-    @OneToMany(() => ProductGallery, (productGallery) => productGallery.product)
-    gallery: ProductGallery[]
+    @OneToMany(() => ProductImage, (productImage) => productImage.product)
+    gallery: ProductImage[]
 }

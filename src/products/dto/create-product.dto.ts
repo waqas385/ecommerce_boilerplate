@@ -27,5 +27,5 @@ export class CreateProductDto {
 
     @IsArray()
     @IsOptional()
-    public images: {name: string, path: string}[];
+    public gallery: {name: string, path: string}[];
 }
