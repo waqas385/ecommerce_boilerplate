@@ -96,6 +96,12 @@ export class ProductsService {
     return product;
   }
 
+  async findOneByName(productName: string) {
+    return await this.productRepository.findOneBy({
+      name: Like(`%${productName}%`)
+    });
+  }
+
   async update(id: number, updateProductDto: UpdateProductDto): Promise<Product> {
     const product = await this.findOne(id);
 
@@ -104,6 +110,12 @@ export class ProductsService {
         product[field] = updateProductDto[field];
       }
     }
+
+    // Check if same name product already exists
+    // const sameProductNameExists = await this.findOneByName(product.name);
+    // if (sameProductNameExists) {
+    //   throw new BadRequestException(`Product with same name "${product.name}" already exits`);
+    // }
 
     if (updateProductDto.category) {
       const category = await this.productCategoryService.findOne(updateProductDto.category);

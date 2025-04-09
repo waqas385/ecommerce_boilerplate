@@ -5,6 +5,8 @@ import { ProductCategory } from "./entities/product-category";
 import { PageRequestDTO } from "./dto/pagination/page.request.dto";
 import { PageResponseDTO } from "./dto/pagination/page.response.dto";
 import { PageMetaDTO } from "./dto/pagination/page.meta.dto";
+import { CreateProductCategoryDto } from "./dto/create-product-category.dto";
+import { UpdateProductDto } from "./dto/update-product.dto";
 
 @Injectable()
 export class ProductsCategoryService {
@@ -72,5 +74,35 @@ export class ProductsCategoryService {
         });
 
         return new PageResponseDTO(await Promise.all(entities), pageMetaDto);
+    }
+
+    async findOneById(id: number) {
+        if (!id) {
+            throw new BadRequestException('Invalid product category id');
+        }
+
+        const category = await this.productCategoryRepository.findOneBy({ id });
+
+        if (!category) {
+            throw new BadRequestException('Invalid product category id');
+        }
+
+        return category;
+    }
+
+    async update(id: number, productCategoryDto: CreateProductCategoryDto) {
+        const category = await this.findOneById(id);
+        category.name = productCategoryDto.name;
+        if (productCategoryDto.parentId) {
+            category.parentId = productCategoryDto.parentId;
+        }
+
+        await this.productCategoryRepository.save(category);
+        return category;
+    }
+
+    async remove(id: number) {
+        const category = await this.findOneById(id);
+        return await this.productCategoryRepository.remove(category);
     }
 }

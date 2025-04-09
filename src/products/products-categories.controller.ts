@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, BadRequestException } from '@nestjs/common';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Role } from 'src/users/enum/role.enum';
 import { Roles } from 'src/auth/decorator/roles.decorator';
@@ -22,20 +22,28 @@ export class ProductsCategoriesController {
     const requestDTO = plainToInstance(PageRequestDTO, pageRequestDTO);
     return await this.productsCategoryService.findAll(requestDTO);
   }
-/*
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productsCategoryService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    if (!id) {
+      throw new BadRequestException('Invalid product category id');
+    }
+    return await this.productsCategoryService.findOneById(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsCategoryService.update(+id, updateProductDto);
+  async update(@Param('id') id: string, @Body() productCategoryDto: CreateProductCategoryDto) {
+    if (!id) {
+      throw new BadRequestException('Invalid product category id');
+    }
+    return this.productsCategoryService.update(+id, productCategoryDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
+    if (!id) {
+      throw new BadRequestException('Invalid product category id');
+    }
     return this.productsCategoryService.remove(+id);
   }
-*/
 }
