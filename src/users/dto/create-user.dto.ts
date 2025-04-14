@@ -38,4 +38,8 @@ export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
   public password: string;
+
+  @IsOptional()
+  @IsString()
+  public profilePhoto: string;
 }

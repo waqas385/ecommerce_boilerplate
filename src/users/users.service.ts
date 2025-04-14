@@ -14,6 +14,9 @@ import { CommonService } from 'src/common/common.service';
 import { SignUpDto } from 'src/auth/dto/signup.dto';
 import { Role } from './enum/role.enum';
 import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
+import { PageResponseDTO } from './dto/pagination/page.response.dto';
+import { PageRequestDTO } from './dto/pagination/page.request.dto';
+import { PageMetaDTO } from './dto/pagination/page.meta.dto';
 
 @Injectable()
 export class UsersService {
@@ -23,25 +26,125 @@ export class UsersService {
     private commonService: CommonService,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  private async isEmailExists(email: string) {
+    const isEmailExists = await this.usersRepository.findOneBy({
+      email
+    });
+
+    if (isEmailExists) {
+      throw new ConflictException('Email already exists');
+    }
+
+    return isEmailExists;
   }
 
-  async findAll() {
-    return await this.usersRepository.find();
-    // return `This action returns all users`;
+  private async isPhoneNumberExists(phoneNumber: string) {
+    const isPhoneNumberExists = await this.usersRepository.findOneBy({
+      phoneNumber
+    });
+
+    if (isPhoneNumberExists) {
+      throw new ConflictException('Phone number already exists');
+    }
+
+    return isPhoneNumberExists;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async create(createUserDto: CreateUserDto) {
+    // check for email already in use
+    await this.isEmailExists(createUserDto.email);
+
+    // check for phone number already in use
+    await this.isPhoneNumberExists(createUserDto.phoneNumber);
+
+    const encryptPassword = await this.commonService.encrypt(
+      createUserDto.password,
+    );
+    const otp = this.commonService.generateOtp();
+    const user = this.usersRepository.create({
+      fullName: createUserDto.fullName,
+      phoneNumber: createUserDto.phoneNumber,
+      email: createUserDto.email,
+      password: encryptPassword,
+      role: Role.User,
+      otp: otp + '_' + new Date().getTime(),
+      profilePhoto: createUserDto.profilePhoto
+    });
+
+    await this.usersRepository.insert(user);
+
+    return user;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findAll(pageRequestDTO: PageRequestDTO,): Promise<PageResponseDTO<User>> {
+    const queryBuilder = this.usersRepository.createQueryBuilder();
+        
+    queryBuilder.orderBy('User.id', pageRequestDTO.order)
+    .skip(pageRequestDTO.skip)
+    .take(pageRequestDTO.take);
+
+    if (pageRequestDTO.search) {
+      // PGSQL - LOWER
+      queryBuilder.andWhere('LOWER(User.fullName) like LOWER(:search) ', {
+          search: `%${pageRequestDTO.search}%`,
+      });
+    }
+  
+    const itemCount = await queryBuilder.getCount();
+    const { entities }: any = await queryBuilder.getRawAndEntities();
+
+    const pageMetaDto = new PageMetaDTO({
+        itemCount,
+        page: pageRequestDTO.page,
+        take: pageRequestDTO.take,
+    });
+
+    return new PageResponseDTO(await Promise.all(entities), pageMetaDto);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async findOne(id: number) {
+    const user = await this.usersRepository.findOne({
+      where: {
+        id
+      }
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    return user;
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.findOne(id);
+
+    for (const updateUserProperty in updateUserDto) {
+      user[updateUserProperty] = updateUserDto[updateUserProperty];
+    }
+
+    if (updateUserDto.password) {
+      user.password = await this.commonService.encrypt(
+        user.password,
+      );
+    }
+
+    await this.usersRepository.save(user);
+    return user;
+  }
+
+  async remove(id: number) {
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    await this.usersRepository.delete(id);
+
+    return {
+      message: 'User deleted successfully'
+    }
   }
 
   async signin(signInDto: SignInDto): Promise<User> {

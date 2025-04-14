@@ -31,6 +31,9 @@ export class User {
   public otp: string;
 
   @Column({ type: 'varchar', default: null, nullable: true })
+  public profilePhoto: string;
+
+  @Column({ type: 'varchar', default: null, nullable: true })
   public country: string;
 
   @Column('varchar')
