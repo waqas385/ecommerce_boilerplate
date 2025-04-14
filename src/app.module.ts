@@ -9,6 +9,7 @@ import { CommonModule } from './common/common.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/guard/roles.guards';
 import { ProductsModule } from './products/products.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ProductsModule } from './products/products.module';
     AuthModule,
     CommonModule,
     ProductsModule,
+    UploadsModule,
   ],
   controllers: [AppController],
   providers: [
