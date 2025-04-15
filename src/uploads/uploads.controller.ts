@@ -57,7 +57,6 @@ export class UploadsController {
   @Roles(Role.Admin, Role.User)
   @Delete('file/:fileId')
   async deleteFile(@Param('fileId') fileId: number) {
-    console.log('Here i am');
     return await this.uploadsService.deleteFile(fileId);
   }
 }
